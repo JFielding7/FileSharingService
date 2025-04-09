@@ -1,4 +1,6 @@
 mod client;
+mod client_handler;
+mod message;
 
 use crate::client::Client;
 use std::collections::HashMap;

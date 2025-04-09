@@ -1,14 +1,11 @@
-use std::cmp::PartialEq;
-use std::collections::HashMap;
 use tokio::net::TcpStream;
 
-use std::hash::{Hash, Hasher};
 use std::io::Error;
 use std::net::SocketAddr;
-use std::sync::Arc;
-use tokio::io::AsyncReadExt;
-use tokio::sync::{Mutex, MutexGuard, RwLock};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use crate::message::Message;
 
+const MAX_NAME_LEN: usize = 64;
 const MESSAGE_BYTES: usize = 1024;
 
 pub struct Client {
@@ -21,7 +18,7 @@ pub struct Client {
 impl Client {
     pub fn new(socket_addr: SocketAddr,
                tcp_stream: TcpStream,
-    ) -> Self {
+) -> Self {
         Self {
             name: "".to_string(),
             socket_addr,
@@ -36,7 +33,6 @@ impl Client {
     }
 
     pub fn set_name(&mut self, name: String) {
-        const MAX_NAME_LEN: usize = 64;
         self.name = if name.len() > MAX_NAME_LEN {
             name[0..MAX_NAME_LEN].to_string()
         } else {
@@ -48,19 +44,7 @@ impl Client {
         self.tcp_stream_buffer[n]
     }
 
-    async fn send_other_clients(&mut self) {
-        let clients = self.other_clients.read().await;
-        for client in clients.values() {
-            if self.socket_addr != client.lock().await.socket_addr {
-
-            }
-        }
-    }
-
-    pub async fn update_client_list(&mut self) {
-        let clients = self.other_clients.read().await;
-        for user in clients.values() {
-
-        }
+    pub fn send_message(&mut self, message: Message) {
+        self.tcp_stream
     }
 }
