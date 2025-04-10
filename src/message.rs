@@ -1,22 +1,23 @@
 use std::io::Read;
 
-use crate::message::Message::{FileSendRequest, UserInfo};
+use crate::message::Message::{FileSendRequest, UserInfoMessage};
 use std::net::IpAddr::{V4, V6};
 use std::net::SocketAddr;
+use crate::user_info::UserInfo;
 
 pub const MAX_NAME_LEN: usize = 63;
 pub const MESSAGE_BYTES: usize = 1024;
 
 pub enum Message {
-    UserInfo(String, SocketAddr),
-    FileSendRequest(String, SocketAddr),
+    UserInfoMessage(UserInfo),
+    FileSendRequest(UserInfo),
 }
 
 impl Message {
     pub fn byte_buffer(&self) -> Vec<u8> {
         match self {
-            UserInfo(name, addr) => user_info_buffer(name, addr),
-            FileSendRequest(name, addr) => file_send_request_buffer(name, addr),
+            UserInfoMessage(user) => user_info_buffer(user),
+            FileSendRequest(user) => file_send_request_buffer(user),
         }
     }
 }
@@ -28,7 +29,7 @@ fn fill_name(buffer: &mut [u8], name: &String) {
     buffer[name.len()] = 0;
 }
 
-fn fill_socket_addr(buffer: &mut [u8], addr: &SocketAddr) {
+fn fill_socket_addr(buffer: &mut [u8], addr: SocketAddr) {
     const IPV4_CODE: u8 = 0;
     const IPV6_CODE: u8 = 1;
     const IP_ADDR_OFFSET: usize = 1;
@@ -55,26 +56,25 @@ fn fill_socket_addr(buffer: &mut [u8], addr: &SocketAddr) {
 }
 
 fn fill_name_and_socket_addr(message_code: u8,
-                             name: &String,
-                             addr: &SocketAddr
+                             user: &UserInfo,
 ) -> Vec<u8> {
     const NAME_OFFSET: usize = 1;
     const SOCKET_ADDR_OFFSET: usize = MAX_NAME_LEN + 1;
 
-    let buffer = vec![0; MESSAGE_BYTES];
+    let mut buffer = vec![0; MESSAGE_BYTES];
     buffer[0] = message_code;
-    fill_name(&mut buffer[NAME_OFFSET..], name);
-    fill_socket_addr(&mut buffer[SOCKET_ADDR_OFFSET..], addr);
+    fill_name(&mut buffer[NAME_OFFSET..], &user.name);
+    fill_socket_addr(&mut buffer[SOCKET_ADDR_OFFSET..], user.socket_addr);
     buffer
 }
 
-fn user_info_buffer(name: &String, addr: &SocketAddr) -> Vec<u8> {
+fn user_info_buffer(user: &UserInfo) -> Vec<u8> {
     const USER_INFO_CODE: u8 = 0;
-    fill_name_and_socket_addr(USER_INFO_CODE, name, addr)
+    fill_name_and_socket_addr(USER_INFO_CODE, user)
 }
 
-fn file_send_request_buffer(name: &String, addr: &SocketAddr) -> Vec<u8> {
+fn file_send_request_buffer(user: &UserInfo) -> Vec<u8> {
     const FILE_SEND_REQUEST_CODE: u8 = 1;
-    fill_name_and_socket_addr(FILE_SEND_REQUEST_CODE, name, addr)
+    fill_name_and_socket_addr(FILE_SEND_REQUEST_CODE, user)
 }
 
