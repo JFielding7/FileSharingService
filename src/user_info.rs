@@ -5,6 +5,12 @@ pub struct UserInfo {
     pub socket_addr: SocketAddr,
 }
 
+impl UserInfo {
+    pub fn new(name: String, socket_addr: SocketAddr) -> Self {
+        Self { name, socket_addr }
+    }
+}
+
 impl Clone for UserInfo {
     fn clone(&self) -> Self {
         Self {
