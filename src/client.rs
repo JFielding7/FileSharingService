@@ -3,10 +3,7 @@ use tokio::net::TcpStream;
 use std::io::Error;
 use std::net::SocketAddr;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use crate::message::Message;
-
-const MAX_NAME_LEN: usize = 64;
-const MESSAGE_BYTES: usize = 1024;
+use crate::message::{Message, MAX_NAME_LEN, MESSAGE_BYTES};
 
 pub struct Client {
     name: String,
