@@ -1,11 +1,9 @@
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::net::IpAddr::{V4, V6};
 use bytes::{Buf, BytesMut};
-use crate::message::{IPV4_SIZE, IPV6_SIZE};
+use crate::message::{Message, IPV4_SIZE, IPV6_SIZE, USER_INFO_CODE, IPV4_CODE, IPV6_CODE};
+use crate::message::Message::{FileSendRequest, UserInfoMessage};
 use crate::user_info::UserInfo;
-
-const IPV4_CODE: u8 = 0;
-const IPV6_CODE: u8 = 1;
 
 fn get_name(buffer: &mut BytesMut) -> String {
     const MAX_NAME_LEN: usize = 64;
@@ -34,7 +32,22 @@ fn get_socket_addr(buffer: &mut BytesMut) -> Option<SocketAddr> {
     Some(SocketAddr::new(get_ip_addr(buffer)?, get_port_num(buffer)))
 }
 
-pub fn deserialize_user_info(mut buffer: BytesMut) -> Option<UserInfo> {
+fn deserialize_user_info(mut buffer: BytesMut) -> Option<UserInfo> {
     let name = get_name(&mut buffer);
     Some(UserInfo::new(name, get_socket_addr(&mut buffer)?))
+}
+
+fn deserialize_user_info_message(buffer: BytesMut) -> Option<Message> {
+    Some(UserInfoMessage(deserialize_user_info(buffer)?))
+}
+
+fn deserialize_file_send_request(buffer: BytesMut) -> Option<Message> {
+    Some(FileSendRequest(deserialize_user_info(buffer)?))
+}
+
+pub fn deserialize(mut buffer: BytesMut) -> Option<Message> {
+    match buffer.get_u8() {
+        USER_INFO_CODE => deserialize_user_info_message(buffer),
+        _ => panic!("Can't deserialize")
+    }
 }

@@ -3,8 +3,7 @@ mod client_handler;
 mod message;
 mod user_info;
 mod message_serializer;
-mod message_processor;
-mod buffer;
+mod message_deserializer;
 
 use crate::client::Client;
 use crate::client_handler::{ClientHandler, ClientMap};
@@ -14,11 +13,11 @@ use std::sync::Arc;
 use bytes::BytesMut;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
-use crate::message_processor::deserialize_user_info_message;
+use crate::message_deserializer::deserialize;
 
 fn process_message(buffer: BytesMut, client_map: ClientMap) {
     println!("processing");
-    match deserialize_user_info_message(buffer).unwrap() {
+    match deserialize(buffer).unwrap() {
         Message::UserInfoMessage(user) => {
             println!("{:?}", user)
         }
