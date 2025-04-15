@@ -36,9 +36,9 @@ impl Client {
         Ok(num_bytes)
     }
 
-    pub async fn send_message(&mut self, message: Message) -> io::Result<()> {
-        let buffer = message.serialize();
-        self.tcp_stream.write_all(&buffer).await?;
-        Ok(())
-    }
+    // pub async fn send_message(&mut self, message: Message) -> io::Result<()> {
+    //     let buffer = message.serialize();
+    //     self.tcp_stream.write_all(&buffer).await?;
+    //     Ok(())
+    // }
 }

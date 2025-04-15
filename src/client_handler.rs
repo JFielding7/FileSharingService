@@ -26,12 +26,12 @@ impl ClientHandler {
     async fn send_info_to_others(clients: Iter<'_, SocketAddr, Arc<Mutex<Client>>>,
                                  user_info: UserInfo
     ) -> io::Result<()> {
-        for (&addr, client) in clients {
-            if addr != user_info.socket_addr {
-                client.lock().await.send_message(Message::UserInfoMessage(user_info.clone())).await?;
-            }
-        }
-
+        // for (&addr, client) in clients {
+        //     if addr != user_info.socket_addr {
+        //         client.lock().await.send_message(Message::UserInfoMessage(user_info.clone())).await?;
+        //     }
+        // }
+        //
         Ok(())
     }
 

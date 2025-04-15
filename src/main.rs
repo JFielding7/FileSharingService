@@ -2,6 +2,9 @@ mod client;
 mod client_handler;
 mod message;
 mod user_info;
+mod message_serializer;
+mod message_processor;
+mod buffer;
 
 use crate::client::Client;
 use crate::client_handler::{ClientHandler, ClientMap};
@@ -48,9 +51,7 @@ async fn listen_for_connections(listener: &TcpListener) {
 
         tokio::spawn(async move {
             match listen_to_stream(client_mutex_clone, client_map).await {
-                Ok(_) => {
-                    println!("Connection Closed");
-                }
+                Ok(_) => println!("Connection Closed"),
                 Err(e) => println!("{e}")
             }
         });
