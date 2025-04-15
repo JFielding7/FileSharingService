@@ -6,34 +6,32 @@ mod message_serializer;
 mod message_deserializer;
 
 use crate::client::Client;
-use crate::client_handler::{ClientHandler, ClientMap};
-use crate::message::{Message, MESSAGE_BYTES};
+use crate::message::Message::UserInfoMessage;
+use crate::message_deserializer::deserialize;
+use bytes::BytesMut;
 use std::io;
 use std::sync::Arc;
-use bytes::BytesMut;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
-use crate::message_deserializer::deserialize;
+use crate::client_handler::{ClientMapOperations, ClientMapRef};
 
-fn process_message(buffer: BytesMut, client_map: ClientMap) {
+fn process_message(buffer: BytesMut, clients: ClientMapRef) {
     println!("processing");
     match deserialize(buffer).unwrap() {
-        Message::UserInfoMessage(user) => {
-            println!("{:?}", user)
+        UserInfoMessage(user) => {
+            // println!("{:?}", user)
         }
         _ => {}
     }
 }
 
-async fn listen_to_stream(client_mutex: Arc<Mutex<Client>>,
-                          client_map: ClientMap,
+async fn listen_to_stream(client: Arc<Client>,
+                          client_map: ClientMapRef,
 ) -> io::Result<()> {
     println!("Listening");
 
     loop {
-        let mut client = client_mutex.lock().await;
         let buffer = client.read().await?;
-        drop(client);
 
         match buffer.len() {
             0 => break,
@@ -45,24 +43,29 @@ async fn listen_to_stream(client_mutex: Arc<Mutex<Client>>,
 }
 
 async fn listen_for_connections(listener: &TcpListener) {
-    let client_handler = ClientHandler::new();
+    let mut client_handler = ClientMapRef::create();
 
     loop {
-        let (stream, address) = listener.accept().await.unwrap();
-        println!("Connected {}", address.port());
-        let client_mutex = Arc::new(Mutex::new(Client::new(address, stream)));
+        for c in client_handler.read().await.values() {
+            println!("Client: {:?}", c.get_info());
+        }
 
-        let client_mutex_clone = client_mutex.clone();
-        let client_map = client_handler.client_map.clone();
+        let (stream, address) = listener.accept().await.unwrap();
+        // println!("Connected {}", address.port());
+
+        let client = Arc::new(Client::new(address, stream));
+
+        let client_clone = client.clone();
+        let clients = client_handler.clone();
 
         tokio::spawn(async move {
-            match listen_to_stream(client_mutex_clone, client_map).await {
+            match listen_to_stream(client_clone, clients).await {
                 Ok(_) => println!("Connection Closed"),
                 Err(e) => println!("{e}")
             }
         });
 
-        client_handler.insert(address, client_mutex).await;
+        client_handler.add_client(address, client).await;
     }
 }
 

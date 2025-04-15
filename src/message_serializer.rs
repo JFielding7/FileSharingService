@@ -1,3 +1,4 @@
+use std::cmp::min;
 use crate::message::Message::UserInfoMessage;
 use crate::message::{Message, FILE_SEND_REQUEST_MESSAGE, IPV4_CODE, IPV6_CODE, MESSAGE_BYTES, NAME_BYTES, USER_INFO_CODE};
 use crate::user_info::UserInfo;
@@ -8,8 +9,9 @@ use std::net::{IpAddr, SocketAddr};
 
 fn serialize_name(buffer: &mut BytesMut, name: &String) {
     let len = buffer.len();
+    println!("{len}");
 
-    for &char in name.as_bytes()[..NAME_BYTES].iter() {
+    for &char in name.as_bytes()[..min(NAME_BYTES, name.len())].iter() {
         buffer.put_u8(char);
     }
 
