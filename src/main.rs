@@ -8,30 +8,37 @@ mod buffer;
 
 use crate::client::Client;
 use crate::client_handler::{ClientHandler, ClientMap};
-use crate::message::MESSAGE_BYTES;
+use crate::message::{Message, MESSAGE_BYTES};
 use std::io;
 use std::sync::Arc;
+use bytes::BytesMut;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
+use crate::message_processor::deserialize_user_info_message;
 
-fn process_message(buffer: &[u8], client_map: ClientMap) {
-    println!("processing")
+fn process_message(buffer: BytesMut, client_map: ClientMap) {
+    println!("processing");
+    match deserialize_user_info_message(buffer).unwrap() {
+        Message::UserInfoMessage(user) => {
+            println!("{:?}", user)
+        }
+        _ => {}
+    }
 }
 
 async fn listen_to_stream(client_mutex: Arc<Mutex<Client>>,
                           client_map: ClientMap,
 ) -> io::Result<()> {
     println!("Listening");
-    let mut buffer = vec![0; MESSAGE_BYTES];
 
     loop {
         let mut client = client_mutex.lock().await;
-        let bytes = client.read(&mut buffer).await?;
+        let buffer = client.read().await?;
         drop(client);
 
-        match bytes {
-            0 => { break; }
-            _ => process_message(&buffer, client_map.clone())
+        match buffer.len() {
+            0 => break,
+            _ => process_message(buffer, client_map.clone())
         }
     }
 

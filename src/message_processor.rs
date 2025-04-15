@@ -1,4 +1,5 @@
-use crate::buffer::Buffer;
+use bytes::{Buf, BytesMut};
+use crate::buffer::deserialize_user_info;
 use crate::message::Message;
 use crate::message::Message::{FileSendRequest, UserInfoMessage};
 use crate::user_info::UserInfo;
@@ -14,23 +15,19 @@ impl Message {
     //     }
     // }
 
-    pub fn deserialize(buffer_vec: Vec<u8>) -> Option<Self> {
-        let mut buffer = Buffer::new(buffer_vec);
-        match buffer.get_byte() {
+    pub fn deserialize(buf: &[u8]) -> Option<Self> {
+        let mut buffer = BytesMut::from(buf);
+        match buffer.get_u8() {
             USER_INFO_CODE => deserialize_user_info_message(buffer),
             _ => panic!("Can't deserialize")
         }
     }
 }
 
-fn deserialize_user_info(mut buffer: Buffer) -> Option<UserInfo> {
-    Some(UserInfo::new(buffer.get_name(), buffer.get_socket_addr()?))
-}
-
-pub fn deserialize_user_info_message(buffer: Buffer) -> Option<Message> {
+pub fn deserialize_user_info_message(buffer: BytesMut) -> Option<Message> {
     Some(UserInfoMessage(deserialize_user_info(buffer)?))
 }
 
-fn deserialize_file_send_request(buffer: Buffer) -> Option<Message> {
+fn deserialize_file_send_request(buffer: BytesMut) -> Option<Message> {
     Some(FileSendRequest(deserialize_user_info(buffer)?))
 }

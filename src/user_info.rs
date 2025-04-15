@@ -1,3 +1,5 @@
+use std::fmt;
+use std::fmt::Formatter;
 use std::net::SocketAddr;
 
 pub struct UserInfo {
@@ -17,5 +19,11 @@ impl Clone for UserInfo {
             name: self.name.clone(),
             socket_addr: self.socket_addr,
         }
+    }
+}
+
+impl fmt::Debug for UserInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "User Info: [ Name: {}, Socket Addr: {} ]", self.name, self.socket_addr)
     }
 }

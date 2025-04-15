@@ -1,6 +1,5 @@
 use crate::user_info::UserInfo;
 
-
 pub const MESSAGE_BYTES: usize = 1024;
 pub const NAME_BYTES: usize = 64;
 pub const IPV4_CODE: u8 = 0;
